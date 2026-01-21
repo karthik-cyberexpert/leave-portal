@@ -1445,6 +1445,32 @@ app.put('/students/sync-batch-status/:batchId', authenticateToken, async (req, r
   }
 });
 
+// Update student semesters with batch (syncing current semester)
+app.put('/students/sync-batch-semester/:batchId', authenticateToken, async (req, res) => {
+  try {
+    const { batchId } = req.params;
+    const { semester } = req.body;
+
+    if (!semester) {
+      return res.status(400).json({ error: 'Semester number is required' });
+    }
+
+    // Update all students in this batch to the specified semester
+    const [result] = await query(
+      'UPDATE students SET semester = ? WHERE batch = ?',
+      [semester, batchId]
+    );
+
+    res.json({ 
+      message: `${result.affectedRows} students updated to semester ${semester}`, 
+      updatedCount: result.affectedRows 
+    });
+  } catch (error) {
+    console.error('Failed to update students semester:', error);
+    res.status(500).json({ error: 'Failed to update students semester' });
+  }
+});
+
 app.put('/students/:id/profile', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;

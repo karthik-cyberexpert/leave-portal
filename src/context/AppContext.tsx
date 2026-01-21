@@ -198,6 +198,7 @@ interface IAppContext {
   fetchWeeklyLeaveData: (batch?: string) => Promise<any[]>;
   fetchDailyLeaveData: (batch?: string) => Promise<any[]>;
   syncStudentStatusWithBatch: (batchId: string, isActive: boolean) => Promise<void>;
+  syncStudentSemesterWithBatch: (batchId: string, semester: number) => Promise<void>;
 }
 
 const AppContext = createContext<IAppContext | undefined>(undefined);
@@ -1453,6 +1454,27 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const syncStudentSemesterWithBatch = async (batchId: string, semester: number) => {
+    try {
+      const response = await apiClient.put(`/students/sync-batch-semester/${batchId}`, { semester });
+      
+      if (response.data.updatedCount > 0) {
+        showSuccess(`Updated ${response.data.updatedCount} students to semester ${semester} for batch ${batchId}`);
+        
+        // Refresh student data to reflect the changes
+        if (profile) {
+          await fetchDataForProfile(profile);
+        }
+      } else {
+        showSuccess(`No students needed updating for batch ${batchId}`);
+      }
+    } catch (error: any) {
+      console.error(`Failed to sync student semester for batch ${batchId}:`, error);
+      showError(`Failed to sync student semester: ${error.response?.data?.error || error.message}`);
+      throw error;
+    }
+  };
+
   // Manual refresh function for user-triggered updates
   const refreshData = useCallback(async () => {
     if (profile) {
@@ -1632,7 +1654,7 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     updateTutorProfile, updateCurrentUserProfile,
     getTutors, uploadODCertificate, verifyODCertificate, handleOverdueCertificates,
     uploadProfilePhoto, removeProfilePhoto,
-    refreshData, fetchWeeklyLeaveData, fetchDailyLeaveData, syncStudentStatusWithBatch,
+    refreshData, fetchWeeklyLeaveData, fetchDailyLeaveData, syncStudentStatusWithBatch, syncStudentSemesterWithBatch,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

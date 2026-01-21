@@ -22,7 +22,7 @@ interface Semester {
 }
 
 export const BatchManagement = () => {
-  const { students, syncStudentStatusWithBatch } = useAppContext();
+  const { students, syncStudentStatusWithBatch, syncStudentSemesterWithBatch } = useAppContext();
   const { semesterDates, setSemesterDates, saveSemesterDates, batches, createBatch, updateBatch, deleteBatch } = useBatchContext();
   
   // Debug: Log batch data whenever it changes
@@ -594,6 +594,7 @@ export const BatchManagement = () => {
                   <TableHead>Semester</TableHead>
                   <TableHead>Start Date</TableHead>
                   <TableHead>End Date</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -636,12 +637,22 @@ export const BatchManagement = () => {
                             fullDisabled={isLocked}
                           />
                       </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => syncStudentSemesterWithBatch(batch, currentSemester)}
+                          title="Update all students in this batch to their current semester"
+                        >
+                          Sync Students
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })}
                 {batchData.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                    <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                       <div className="space-y-2">
                         <div>No batches are currently in an active semester period.</div>
                         <div className="text-xs text-gray-400">

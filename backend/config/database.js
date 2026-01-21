@@ -29,7 +29,7 @@ export const dbConfig = {
   user: 'root',
   password: 'Ace_cs@2025', // Your local MySQL password
   database: 'cyber_security_leave_portal',
-  port: 3307,
+  port: parseInt(process.env.DB_PORT) || 3306,
   waitForConnections: true,
   connectionLimit: 10,
   acquireTimeout: 60000,
