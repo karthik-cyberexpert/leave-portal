@@ -2,19 +2,18 @@ import axios from 'axios';
 import { showError } from './toast';
 
 // API Client Configuration
-// Development: Use localhost
-// Production: Use environment variable or production IP (uncomment when deploying)
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3008';
-
-// PRODUCTION CONFIGURATION (COMMENTED OUT)
-// Uncomment the line below and comment out the localhost line when deploying to production
-// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://210.212.246.131:3009';
+// Frontend runs on 8085, backend API on 3009
+// Prefer VITE_API_URL so it can be overridden per-environment
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  'http://210.212.246.131:3009';
 
 console.log('🌐 Frontend API Configuration:', {
   VITE_API_URL: import.meta.env.VITE_API_URL,
-  API_BASE_URL: API_BASE_URL,
+  API_BASE_URL,
   NODE_ENV: import.meta.env.MODE,
-  Environment: 'Development (Local)'
+  FRONTEND_PORT: 8085,
+  BACKEND_PORT: 3009,
 });
 
 // Global flag to prevent multiple simultaneous redirects

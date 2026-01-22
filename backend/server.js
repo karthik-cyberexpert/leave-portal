@@ -751,7 +751,8 @@ app.get('/api/reports/stats', express.json(), authenticateToken, async (req, res
   }
 });
 
-const port = process.env.PORT || 3008;
+// Backend HTTP port - default 3009, can be overridden by PORT env
+const port = process.env.PORT || 3009;
 const host = '0.0.0.0'; // Bind to all network interfaces for production access
 
 // Create a connection pool
@@ -887,7 +888,18 @@ function authenticateToken(req, res, next) {
       });
     }
     
-    req.user = user;
+    // Fetch user roles for RBAC
+    try {
+      const [dbUser] = await query('SELECT id, is_admin, is_tutor FROM users WHERE id = ?', [user.id]);
+      if (!dbUser) {
+        return res.sendStatus(403);
+      }
+      req.user = { ...user, ...dbUser };
+    } catch (dbError) {
+      console.error('RBAC Error:', dbError);
+      return res.sendStatus(500);
+    }
+
     req.token = token;
     next();
   });
@@ -918,7 +930,21 @@ app.get('/profile', authenticateToken, async (req, res) => {
 // Get all students
 app.get('/students', authenticateToken, async (req, res) => {
   try {
-    const students = await query('SELECT * FROM students ORDER BY name');
+    let queryStr = 'SELECT * FROM students';
+    let params = [];
+
+    // RBAC: Filter students based on user role
+    if (req.user.is_admin) {
+      queryStr += ' ORDER BY name';
+    } else if (req.user.is_tutor) {
+      queryStr += ' WHERE tutor_id = ? ORDER BY name';
+      params.push(req.user.id);
+    } else {
+      queryStr += ' WHERE id = ?';
+      params.push(req.user.id);
+    }
+
+    const students = await query(queryStr, params);
     
     // Add Gravatar profile pictures and calculate dynamic leave_taken for students
     const studentsWithUpdatedData = await Promise.all(students.map(async (student) => {
@@ -1613,7 +1639,21 @@ app.put('/staff/:id/profile', authenticateToken, async (req, res) => {
 // Get leave requests
 app.get('/leave-requests', authenticateToken, async (req, res) => {
   try {
-    const leaveRequests = await query('SELECT * FROM leave_requests ORDER BY created_at DESC');
+    let queryStr = 'SELECT * FROM leave_requests';
+    let params = [];
+
+    // RBAC: Filter leave requests based on user role
+    if (req.user.is_admin) {
+      queryStr += ' ORDER BY created_at DESC';
+    } else if (req.user.is_tutor) {
+      queryStr += ' WHERE tutor_id = ? ORDER BY created_at DESC';
+      params.push(req.user.id);
+    } else {
+      queryStr += ' WHERE student_id = ? ORDER BY created_at DESC';
+      params.push(req.user.id);
+    }
+
+    const leaveRequests = await query(queryStr, params);
     res.json(leaveRequests);
   } catch (error) {
     console.error(error);
@@ -1846,7 +1886,21 @@ app.put('/leave-requests/:id/status', authenticateToken, async (req, res) => {
 // Get OD requests
 app.get('/od-requests', authenticateToken, async (req, res) => {
   try {
-    const odRequests = await query('SELECT * FROM od_requests ORDER BY created_at DESC');
+    let queryStr = 'SELECT * FROM od_requests';
+    let params = [];
+
+    // RBAC: Filter OD requests based on user role
+    if (req.user.is_admin) {
+      queryStr += ' ORDER BY created_at DESC';
+    } else if (req.user.is_tutor) {
+      queryStr += ' WHERE tutor_id = ? ORDER BY created_at DESC';
+      params.push(req.user.id);
+    } else {
+      queryStr += ' WHERE student_id = ? ORDER BY created_at DESC';
+      params.push(req.user.id);
+    }
+
+    const odRequests = await query(queryStr, params);
     res.json(odRequests);
   } catch (error) {
     console.error(error);
