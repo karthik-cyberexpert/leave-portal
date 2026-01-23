@@ -232,25 +232,6 @@ const LeaveRequestPage = () => {
                           
                           if (isExceptionDay) return true;
                           
-                          // If we have a current semester and student batch, validate against semester dates
-                          if (currentSemester && currentUser?.batch) {
-                            const semesterRange = getSemesterDateRange(currentUser.batch, currentSemester);
-                            if (semesterRange) {
-                              const semesterStart = new Date(semesterRange.start);
-                              semesterStart.setHours(0, 0, 0, 0);
-                              
-                              // Date must be on or after semester start
-                              if (date < semesterStart) return true;
-                              
-                              // If semester has an end date, date must be before or on end date
-                              if (semesterRange.end && semesterRange.end.getTime() !== 8640000000000000) {
-                                const semesterEnd = new Date(semesterRange.end);
-                                semesterEnd.setHours(23, 59, 59, 999);
-                                if (date > semesterEnd) return true;
-                              }
-                            }
-                          }
-                          
                           return false;
                         }}
                       />
@@ -282,19 +263,6 @@ const LeaveRequestPage = () => {
                           console.log('End date picker check:', { date: dateStr, isException: isExceptionDay, exceptionDays });
                           
                           if (isExceptionDay) return true;
-                          
-                          // If we have a current semester and student batch, validate against semester dates
-                          if (currentSemester && currentUser?.batch) {
-                            const semesterRange = getSemesterDateRange(currentUser.batch, currentSemester);
-                            if (semesterRange) {
-                              // If semester has an end date, date must be before or on end date
-                              if (semesterRange.end && semesterRange.end.getTime() !== 8640000000000000) {
-                                const semesterEnd = new Date(semesterRange.end);
-                                semesterEnd.setHours(23, 59, 59, 999);
-                                if (date > semesterEnd) return true;
-                              }
-                            }
-                          }
                           
                           return false;
                         }}
